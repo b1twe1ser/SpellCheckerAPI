@@ -66,8 +66,15 @@ func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGr
 			word = strings.Replace(word, string(v), "", 1)
 		}
 	}
+
 	beginningLetter := string(word[0])
-	fileName := fmt.Sprintf(("%s.txt"), beginningLetter)
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+
+	fileName := fmt.Sprintf((pwd + "/dictionary/%s.txt"), beginningLetter)
 
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -102,6 +109,7 @@ func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGr
 	if response.Location == nil {
 		response.Location = []int{}
 	}
+
 	f.Close()
 	mu.Unlock()
 	wg.Done()
