@@ -37,7 +37,7 @@ func checkSpelling(sentence string) *Response {
 	wg.Add(len(words))
 	var mu sync.Mutex
 	for i, word := range words {
-		go wordIsIn(i, word, isIn, words, response, &wg, &mu)
+		go wordIsIn(i, word, isIn, response, &wg, &mu)
 	}
 	wg.Wait()
 	sort.Ints(response.Location)
@@ -45,7 +45,7 @@ func checkSpelling(sentence string) *Response {
 	return response
 }
 
-func wordIsIn(i int, word string, isIn bool, sentence []string, response *Response, wg *sync.WaitGroup, mu *sync.Mutex) {
+func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGroup, mu *sync.Mutex) {
 	mu.Lock()
 	word = strings.ToLower(word)
 
@@ -87,7 +87,7 @@ func wordIsIn(i int, word string, isIn bool, sentence []string, response *Respon
 		response.Mistake += 1
 		response.Location = append(response.Location, i)
 		response.Location = sort.IntSlice(response.Location)
-		response.WrongWords = append(response.WrongWords, sentence[i])
+		response.WrongWords = append(response.WrongWords, word)
 
 	}
 
