@@ -14,9 +14,10 @@ import (
 )
 
 type Response struct {
-	Input    string
-	Mistake  int
-	Location []int
+	Input      string
+	Mistake    int
+	Location   []int
+	WrongWords []string
 }
 
 type Request struct {
@@ -36,7 +37,7 @@ func checkSpelling(sentence string) *Response {
 	wg.Add(len(words))
 	var mu sync.Mutex
 	for i, word := range words {
-		go wordIsIn(i, word, isIn, response, &wg, &mu)
+		go wordIsIn(i, word, isIn, words, response, &wg, &mu)
 	}
 	wg.Wait()
 	sort.Ints(response.Location)
@@ -44,9 +45,10 @@ func checkSpelling(sentence string) *Response {
 	return response
 }
 
-func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGroup, mu *sync.Mutex) {
+func wordIsIn(i int, word string, isIn bool, sentence []string, response *Response, wg *sync.WaitGroup, mu *sync.Mutex) {
 	mu.Lock()
 	word = strings.ToLower(word)
+
 	if isANumber(word) {
 		word = "a"
 	}
@@ -72,8 +74,6 @@ func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGr
 		log.Println(err)
 	}
 
-	defer f.Close()
-
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
@@ -86,16 +86,23 @@ func wordIsIn(i int, word string, isIn bool, response *Response, wg *sync.WaitGr
 	if !isIn {
 		response.Mistake += 1
 		response.Location = append(response.Location, i)
+		response.Location = sort.IntSlice(response.Location)
+		response.WrongWords = append(response.WrongWords, sentence[i])
+
 	}
 
 	if isIn {
 		isIn = false
 	}
 
+	if response.WrongWords == nil {
+		response.WrongWords = []string{}
+	}
+
 	if response.Location == nil {
 		response.Location = []int{}
 	}
-
+	f.Close()
 	mu.Unlock()
 	wg.Done()
 }
@@ -156,3 +163,5 @@ func isMixWithLetter(word string) bool {
 	}
 	return hasSpecial == true && amount >= 2
 }
+
+// 1.46ms per word
