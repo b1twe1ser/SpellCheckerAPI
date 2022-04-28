@@ -1,4 +1,4 @@
-# CheckSpellAPI
+# SpellCheckerAPI
 
 
 ## Required Libraries 📚
